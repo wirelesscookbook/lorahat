@@ -17,15 +17,13 @@ class sx126x:
     serial_n = ""
     addr_temp = 0
 
-    #
-    # start frequence of two lora module
+    # start frequency of the two lora modules
     #
     # E22-400T22S           E22-900T22S
     # 410~493MHz      or    850~930MHz
     start_freq = 850
 
-    #
-    # offset between start and end frequence of two lora module
+    # offset between the start and end frequency of the two lora module
     #
     # E22-400T22S           E22-900T22S
     # 410~493MHz      or    850~930MHz
@@ -85,7 +83,7 @@ class sx126x:
         self.freq = freq
         self.serial_n = serial_num
         self.power = power
-        # Initial the GPIO for M0 and M1 Pin
+        # Initialize the GPIO for M0 and M1 Pin
         GPIO.setmode(GPIO.BCM)
         GPIO.setwarnings(False)
         GPIO.setup(self.M0,GPIO.OUT)
@@ -199,14 +197,15 @@ class sx126x:
                     #print("parameters setting fail :",r_buff)
                 break
             else:
-                print("setting fail,setting again")
+                print("Setting fail... attempting to set again.")
                 self.ser.flushInput()
                 time.sleep(0.2)
                 print('\x1b[1A',end='\r')
                 if i == 1:
-                    print("setting fail,Press Esc to Exit and run again")
-                    # time.sleep(2)
-                    # print('\x1b[1A',end='\r')
+                    print("Setting fail.")
+                    print("Press Esc to Exit and run again.")
+                    time.sleep(2)
+                    print('\x1b[1A',end='\r')
 
         GPIO.output(self.M0,GPIO.LOW)
         GPIO.output(self.M1,GPIO.LOW)
@@ -256,13 +255,13 @@ class sx126x:
             time.sleep(0.5)
             r_buff = self.ser.read(self.ser.inWaiting())
 
-            print("receive message from node address with frequence\033[1;32m %d,%d.125MHz\033[0m"%((r_buff[0]<<8)+r_buff[1],r_buff[2]+self.start_freq),end='\r\n',flush = True)
-            print("message is "+str(r_buff[3:-1]),end='\r\n')
+            print("Receive message from node address with frequence\033[1;32m %d,%d.125MHz\033[0m"%((r_buff[0]<<8)+r_buff[1],r_buff[2]+self.start_freq),end='\r\n',flush = True)
+            print("Message is "+str(r_buff[3:-1]),end='\r\n')
             
             # print the rssi
             if self.rssi:
                 # print('\x1b[3A',end='\r')
-                print("the packet rssi value: -{0}dBm".format(256-r_buff[-1:][0]))
+                print("Packet rssi value: -{0}dBm".format(256-r_buff[-1:][0]))
                 self.get_channel_rssi()
             else:
                 pass
@@ -280,9 +279,9 @@ class sx126x:
             time.sleep(0.1)
             re_temp = self.ser.read(self.ser.inWaiting())
         if re_temp[0] == 0xC1 and re_temp[1] == 0x00 and re_temp[2] == 0x02:
-            print("the current noise rssi value: -{0}dBm".format(256-re_temp[3]))
+            print("Current noise rssi value: -{0}dBm".format(256-re_temp[3]))
             # print("the last receive packet rssi value: -{0}dBm".format(256-re_temp[4]))
         else:
             # pass
-            print("receive rssi value fail")
+            print("Receive rssi value fail")
             # print("receive rssi value fail: ",re_temp)

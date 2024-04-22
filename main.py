@@ -1,19 +1,26 @@
 #!/usr/bin/python
-# -*- coding: UTF-8 -*-
 
-#
-#    this is an UART-LoRa device and thers is an firmware on Module
-#    users can transfer or receive the data directly by UART and dont
-#    need to set parameters like coderate,spread factor,etc.
-#    |============================================ |
-#    |   It does not suport LoRaWAN protocol !!!   |
-#    | ============================================|
-#   
-#    This script is mainly for Raspberry Pi 3B+, 4B, and Zero series
-#    Since PC/Laptop does not have GPIO to control HAT, it should be configured by
-#    GUI and while setting the jumpers, 
-#    Please refer to another script pc_main.py
-#
+'''
+Waveshare SX1262 LoRa HAT send/receive demo
+
+This product is a Raspberry Pi expansion board based on the Semtec SX1268/SX1262 chip.
+The chipset has a wireless serial port module and embedded firmware for LoRa modulation.
+With this demo script, users may transfer or receive data directly via UART.  
+Setting parameters such as coderate, spread factor and so on is not required.
+
+Prior to executing the demo, your device's serial port must first be configured.
+Execute: sudo 'raspi-config' and choose Interface Options > Serial Port.
+Disable the serial login shell, enable the serial interface, then reboot. 
+With the LoRa HAT attached to RPi, the M0 and M1 jumpers should be removed.
+
+Note that the SX1262 LoRa HAT does NOT suport the LoRaWAN protocol.
+
+This script is primarily for Raspberry Pi models 3B+, 4B, and the Zero series.
+
+@see https://github.com/MithunHub/LoRa 
+@link https://www.waveshare.com/wiki/SX1262_868M_LoRa_HAT
+@license https://github.com/wirelesscookbook/blob/master/LICENSE
+'''
 
 import sys
 import sx126x
@@ -28,16 +35,7 @@ old_settings = termios.tcgetattr(sys.stdin)
 tty.setcbreak(sys.stdin.fileno())
 
 
-#
-#    Need to disable the serial login shell and have to enable serial interface 
-#    command `sudo raspi-config`
-#    More details: see https://github.com/MithunHub/LoRa/blob/main/Basic%20Instruction.md
-#
-#    When the LoRaHAT is attached to RPi, the M0 and M1 jumpers of HAT should be removed.
-#
-
-
-#    The following is to obtain the temprature of the RPi CPU 
+#    Obtain the temprature of the RPi CPU 
 def get_cpu_temp():
     tempFile = open( "/sys/class/thermal/thermal_zone0/temp" )
     cpu_temp = tempFile.read()
@@ -50,11 +48,11 @@ def get_cpu_temp():
 #    Frequency is [850 to 930], or [410 to 493] MHz
 #
 #    address is 0 to 65535
-#        under the same frequence,if set 65535,the node can receive 
+#        under the same frequency, if set 65535, the node can receive 
 #        messages from another node of address is 0 to 65534 and similarly,
 #        the address 0 to 65534 of node can receive messages while 
 #        the another note of address is 65535 sends.
-#        otherwise two node must be same the address and frequence
+#        Otherwise two node must be same the address and frequency
 #
 #    The tramsmit power is {10, 13, 17, and 22} dBm
 #
@@ -62,14 +60,13 @@ def get_cpu_temp():
 #        It will print the RSSI value when it receives each message
 #
 
-# node = sx126x.sx126x(serial_num = "/dev/ttyS0",freq=433,addr=0,power=22,rssi=False,air_speed=2400,relay=False)
 node = sx126x.sx126x(serial_num = "/dev/ttyS0",freq=868,addr=0,power=22,rssi=True,air_speed=2400,relay=False)
 
 def send_deal():
     get_rec = ""
     print("")
-    print("input a string such as \033[1;32m0,868,Hello World\033[0m,it will send `Hello World` to lora node device of address 0 with 868M ")
-    print("please input and press Enter key:",end='',flush=True)
+    print("Input a message such as \033[1;32m0,868,Hello World\033[0m,it will send `Hello World` to a LoRa node device address 0 with 868M ")
+    print("Enter your message followed by Enter:",end='',flush=True)
 
     while True:
         rec = sys.stdin.read(1)
@@ -81,13 +78,13 @@ def send_deal():
 
     get_t = get_rec.split(",")
 
-    offset_frequence = int(get_t[1])-(850 if int(get_t[1])>850 else 410)
+    offset_frequency = int(get_t[1])-(850 if int(get_t[1])>850 else 410)
     #
     # the sending message format
     #
     #         receiving node              receiving node                   receiving node           own high 8bit           own low 8bit                 own 
     #         high 8bit address           low 8bit address                    frequency                address                 address                  frequency             message payload
-    data = bytes([int(get_t[0])>>8]) + bytes([int(get_t[0])&0xff]) + bytes([offset_frequence]) + bytes([node.addr>>8]) + bytes([node.addr&0xff]) + bytes([node.offset_freq]) + get_t[2].encode()
+    data = bytes([int(get_t[0])>>8]) + bytes([int(get_t[0])&0xff]) + bytes([offset_frequency]) + bytes([node.addr>>8]) + bytes([node.addr&0xff]) + bytes([node.offset_freq]) + get_t[2].encode()
 
     node.send(data)
     print('\x1b[2A',end='\r')
@@ -100,9 +97,8 @@ def send_cpu_continue(continue_or_not = True):
     if continue_or_not:
         global timer_task
         global seconds
-        #
-        # boarcast the cpu temperature at 868.125MHz
-        #
+        
+        # Broadcast the cpu temperature at 868.125MHz
         data = bytes([255]) + bytes([255]) + bytes([18]) + bytes([255]) + bytes([255]) + bytes([12]) + "CPU Temperature:".encode()+str(get_cpu_temp()).encode()+" C".encode()
         node.send(data)
         time.sleep(0.2)
@@ -118,7 +114,7 @@ def send_cpu_continue(continue_or_not = True):
 try:
     time.sleep(1)
     print("Press \033[1;32mEsc\033[0m to exit")
-    print("Press \033[1;32mi\033[0m   to send")
+    print("Press \033[1;32mi\033[0m   to send a message")
     print("Press \033[1;32ms\033[0m   to send cpu temperature every 10 seconds")
     
     # it will send rpi cpu temperature every 10 seconds 
