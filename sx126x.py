@@ -255,13 +255,13 @@ class sx126x:
             time.sleep(0.5)
             r_buff = self.ser.read(self.ser.inWaiting())
 
-            print("Receive message from node address with frequence\033[1;32m %d,%d.125MHz\033[0m"%((r_buff[0]<<8)+r_buff[1],r_buff[2]+self.start_freq),end='\r\n',flush = True)
-            print("Message is "+str(r_buff[3:-1]),end='\r\n')
+            print("Received a message from node address\033[1;32m %d\033[0m on frequency\033[1;32m %.3f MHz\033[0m..." % ((r_buff[0] << 8) + r_buff[1], r_buff[2] + self.start_freq), end='\r\n', flush=True)
+            print("Message is '"+r_buff[3:-1].decode() + "'", end='\r\n')
             
-            # print the rssi
+            # Output the RSSI values
             if self.rssi:
                 # print('\x1b[3A',end='\r')
-                print("Packet rssi value: -{0}dBm".format(256-r_buff[-1:][0]))
+                print("Packet RSSI value: -{0}dBm".format(256-r_buff[-1:][0]))
                 self.get_channel_rssi()
             else:
                 pass
@@ -279,9 +279,9 @@ class sx126x:
             time.sleep(0.1)
             re_temp = self.ser.read(self.ser.inWaiting())
         if re_temp[0] == 0xC1 and re_temp[1] == 0x00 and re_temp[2] == 0x02:
-            print("Current noise rssi value: -{0}dBm".format(256-re_temp[3]))
+            print("Noise RSSI value: -{0}dBm".format(256-re_temp[3]))
             # print("the last receive packet rssi value: -{0}dBm".format(256-re_temp[4]))
         else:
             # pass
-            print("Receive rssi value fail")
+            print("Receive RSSI value fail")
             # print("receive rssi value fail: ",re_temp)
