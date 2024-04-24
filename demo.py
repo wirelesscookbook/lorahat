@@ -75,7 +75,7 @@ def get_cpu_temp():
 #    RSSI (receive signal strength indicator) is {True or False}
 #        It will print the RSSI value when it receives each message
 
-print("Starting the SX1262 LoRa Demo...")
+print("Starting the SX126X LoRa Demo...")
 print("Serial interface: " + serial_num)
 print("Frequency: " + str(freq) + " MHz")
 print("Node address: " + str(addr))

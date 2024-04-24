@@ -183,26 +183,17 @@ class sx126x:
                 r_buff = self.ser.read(self.ser.inWaiting())
                 if r_buff[0] == 0xC1:
                     pass
-                    # print("parameters setting is :",end='')
-                    # for i in self.cfg_reg:
-                        # print(hex(i),end=' ')
-                        
-                    # print('\r\n')
-                    # print("parameters return is  :",end='')
-                    # for i in r_buff:
-                        # print(hex(i),end=' ')
-                    # print('\r\n')
                 else:
                     pass
                     #print("parameters setting fail :",r_buff)
                 break
             else:
-                print("Setting fail... attempting to set again.")
+                print("Settings fail... attempting to set again.")
                 self.ser.flushInput()
                 time.sleep(0.2)
                 print('\x1b[1A',end='\r')
                 if i == 1:
-                    print("Setting fail.")
+                    print("Settings fail.")
                     print("Press Esc to Exit and run again.")
                     time.sleep(2)
                     print('\x1b[1A',end='\r')
@@ -229,7 +220,7 @@ class sx126x:
             air_speed_temp = self.get_reg[6] & 0x03
             power_temp = self.get_reg[7] & 0x03
             
-            print("Frequence is {0}.125MHz.",fre_temp)
+            print("Frequency is {0}.125MHz.",fre_temp)
             print("Node address is {0}.",addr_temp)
             print("Air speed is {0} bps"+ lora_air_speed_dic.get(None,air_speed_temp))
             print("Power is {0} dBm" + lora_power_dic.get(None,power_temp))
@@ -284,4 +275,3 @@ class sx126x:
         else:
             # pass
             print("Receive RSSI value fail")
-            # print("receive rssi value fail: ",re_temp)
