@@ -17,10 +17,11 @@ Note that the SX1262 LoRa HAT does NOT suport the LoRaWAN protocol.
 
 This script is primarily for Raspberry Pi models 3B+, 4B, and the Zero series.
 
+Original source modified by @billz
+@author Bill Zimmerman <billzimmerman@gmail.com>
 @see https://github.com/MithunHub/LoRa 
 @link https://www.waveshare.com/wiki/SX1262_868M_LoRa_HAT
 @license https://github.com/wirelesscookbook/blob/master/LICENSE
-
 '''
 
 import sys
@@ -30,11 +31,25 @@ import time
 import select
 import termios
 import tty
+import os
 from threading import Timer
+from dotenv import load_dotenv
 
+load_dotenv()
 old_settings = termios.tcgetattr(sys.stdin)
 tty.setcbreak(sys.stdin.fileno())
 
+def boolean(s):
+    return s.lower() in ['true', 'yes', '1']
+
+# Set default values from .env
+serial_num = os.getenv('SERIAL_INTERFACE')
+freq = int(os.getenv('FREQUENCY'))
+addr = int(os.getenv('ADDRESS'))
+power = int(os.getenv('POWER'))
+rssi = boolean(os.getenv('RSSI'))
+air_speed = int(os.getenv('AIR_SPEED'))
+relay = boolean(os.getenv('RELAY'))
 
 #   Obtain the temprature of the RPi CPU 
 def get_cpu_temp():
@@ -60,13 +75,22 @@ def get_cpu_temp():
 #    RSSI (receive signal strength indicator) is {True or False}
 #        It will print the RSSI value when it receives each message
 
-node = sx126x.sx126x(serial_num = "/dev/ttyS0",freq=868,addr=0,power=22,rssi=True,air_speed=2400,relay=False)
+print("Starting the SX1262 LoRa Demo...")
+print("Serial interface: " + serial_num)
+print("Frequency: " + str(freq) + " MHz")
+print("Node address: " + str(addr))
+print("Power: " + str(power))
+print("RSSI: " + str(rssi))
+print("Air speed: " + str(air_speed))
+print("================")
+
+node = sx126x.sx126x(serial_num,freq,addr,power,rssi,air_speed,relay)
 
 def send_deal():
     get_rec = ""
     print("")
-    print("Messages require inputs like the following: \033[1;32m0,868,Hello World\033[0m")
-    print("This will send 'Hello World' to a LoRa node with device address 0 on frequency 868MHz.")
+    print("Enter a message such as: \033[1;32mHello World\033[0m")
+    print("This will send 'Hello World' to a LoRa node with device address " + str(addr) + " on frequency " + str(freq) +" MHz.")
     print("Input your message followed by Enter: ",end='',flush=True)
 
     while True:
@@ -78,14 +102,13 @@ def send_deal():
             sys.stdout.flush()
 
     get_t = get_rec.split(",")
+    offset_frequency = int(freq)-(850 if int(freq)>850 else 410)
 
-    offset_frequency = int(get_t[1])-(850 if int(get_t[1])>850 else 410)
-    #
     # the sending message format
     #
     #         receiving node              receiving node                   receiving node           own high 8bit           own low 8bit                 own 
     #         high 8bit address           low 8bit address                    frequency                address                 address                  frequency             message payload
-    data = bytes([int(get_t[0])>>8]) + bytes([int(get_t[0])&0xff]) + bytes([offset_frequency]) + bytes([node.addr>>8]) + bytes([node.addr&0xff]) + bytes([node.offset_freq]) + get_t[2].encode()
+    data = bytes([int(addr)>>8]) + bytes([int(addr)&0xff]) + bytes([offset_frequency]) + bytes([node.addr>>8]) + bytes([node.addr&0xff]) + bytes([node.offset_freq]) + get_t[0].encode()
 
     node.send(data)
     print('\x1b[2A',end='\r')
@@ -114,7 +137,6 @@ def send_cpu_continue(continue_or_not = True):
 
 try:
     time.sleep(1)
-    print("Starting the SX1262 LoRa Demo...")
     print("Press \033[1;32mEsc\033[0m to exit")
     print("Press \033[1;32mi\033[0m   to send a message")
     print("Press \033[1;32ms\033[0m   to send CPU temperature every 10 seconds")
@@ -154,13 +176,6 @@ try:
         
 except:
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
-    # print('\x1b[2A',end='\r')
-    # print(" "*100)
-    # print(" "*100)
-    # print('\x1b[2A',end='\r')
 
 termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
-# print('\x1b[2A',end='\r')
-# print(" "*100)
-# print(" "*100)
-# print('\x1b[2A',end='\r')
+
